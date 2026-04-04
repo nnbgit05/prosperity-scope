@@ -5,557 +5,277 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Prosperity Scope</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.35.0/plotly.min.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #0a0e17;
-  --card: #111827;
-  --border: #1e293b;
-  --text: #e2e8f0;
-  --dim: #64748b;
-  --cyan: #00e5ff;
-  --green: #39ff14;
-  --red: #ff3366;
-  --amber: #ffab00;
-  --purple: #7c3aed;
-  --mono: 'JetBrains Mono', 'Fira Code', monospace;
-  --display: 'Space Grotesk', sans-serif;
-}
-
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: var(--bg); color: var(--text); font-family: var(--mono); min-height: 100vh; }
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-/* ── Upload screen ── */
-#upload-screen {
-  display: flex; align-items: center; justify-content: center;
-  min-height: 100vh; transition: opacity 0.3s;
-}
-#upload-screen.hidden { display: none; }
-.upload-box {
-  text-align: center; padding: 60px 50px; border: 2px dashed var(--border);
-  border-radius: 12px; background: var(--card); transition: all 0.2s;
-  max-width: 540px; width: 90%;
-}
-.upload-box.dragover { border-color: var(--cyan); background: #0a0e1f; }
-.upload-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.6; }
-.upload-title {
-  font-family: var(--display); font-size: 24px; font-weight: 700;
-  letter-spacing: 3px; margin-bottom: 8px;
-}
-.upload-sub { font-size: 12px; color: var(--dim); line-height: 1.8; margin-bottom: 28px; }
-.upload-sub span { color: var(--cyan); }
-.upload-btn {
-  padding: 10px 28px; background: transparent; border: 1px solid var(--cyan);
-  color: var(--cyan); font-size: 12px; border-radius: 4px; cursor: pointer;
-  letter-spacing: 1.5; text-transform: uppercase; font-family: var(--mono);
-  transition: all 0.15s;
-}
-.upload-btn:hover { background: var(--cyan); color: var(--bg); }
-
-/* ── Dashboard ── */
-#dashboard { display: none; }
-#dashboard.visible { display: block; }
-
-.header {
-  padding: 12px 24px; display: flex; align-items: center; justify-content: space-between;
-  border-bottom: 1px solid var(--border); background: #0d1117;
-}
-.header-logo { display: flex; align-items: center; gap: 10px; }
-.header-logo-icon { font-size: 20px; color: var(--cyan); }
-.header-logo-text { font-family: var(--display); font-size: 14px; font-weight: 700; letter-spacing: 2px; }
-.product-btns { display: flex; gap: 4px; }
-.product-btn {
-  padding: 6px 16px; font-size: 12px; font-family: var(--mono);
-  background: transparent; color: var(--dim); border: 1px solid transparent;
-  border-radius: 4px; cursor: pointer; letter-spacing: 1; transition: all 0.15s;
-}
-.product-btn.active { background: #1e293b; color: var(--cyan); border-color: #00e5ff44; }
-.new-file-btn {
-  padding: 6px 14px; font-size: 11px; font-family: var(--mono);
-  background: transparent; color: var(--dim); border: 1px solid var(--border);
-  border-radius: 4px; cursor: pointer; transition: all 0.15s;
-}
-.new-file-btn:hover { color: var(--text); border-color: var(--dim); }
-
-/* Metrics */
-.metrics-bar {
-  padding: 16px 24px; display: flex; gap: 10px; flex-wrap: wrap;
-  border-bottom: 1px solid var(--border);
-}
-.metric-card {
-  background: var(--card); border: 1px solid var(--border); border-radius: 6px;
-  padding: 14px 18px; min-width: 130px; flex: 1 1 130px;
-}
-.metric-label {
-  font-size: 10px; color: var(--dim); text-transform: uppercase;
-  letter-spacing: 1.2px; margin-bottom: 4px;
-}
-.metric-value { font-size: 20px; font-weight: 700; }
-.metric-sub { font-size: 10px; color: #94a3b8; margin-top: 2px; }
-
-/* Tabs */
-.tab-bar {
-  padding: 0 24px; border-bottom: 1px solid var(--border);
-  display: flex; gap: 0; overflow-x: auto;
-}
-.tab-btn {
-  padding: 10px 20px; font-size: 11px; font-family: var(--mono);
-  background: transparent; color: var(--dim); border: none;
-  border-bottom: 2px solid transparent; cursor: pointer;
-  text-transform: uppercase; letter-spacing: 1px; transition: all 0.15s;
-  white-space: nowrap;
-}
-.tab-btn.active { background: #1e293b; color: var(--cyan); border-bottom-color: var(--cyan); }
-.tab-btn:hover { color: var(--text); }
-
-/* Chart panels */
-.chart-area { padding: 24px; }
-.chart-panel { display: none; }
-.chart-panel.active { display: block; }
-.chart-desc { font-size: 12px; color: var(--dim); margin-bottom: 12px; }
-.chart-container { width: 100%; }
-
-/* Trade log */
-.trade-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.trade-table th {
-  padding: 8px 10px; text-align: left; color: var(--dim);
-  border-bottom: 1px solid var(--border); font-weight: 500;
-}
-.trade-table td { padding: 6px 10px; border-bottom: 1px solid #1e293b22; }
-.trade-table tr:hover td { background: #1e293b44; }
-.side-buy { color: var(--green); font-weight: 600; }
-.side-sell { color: var(--red); font-weight: 600; }
-
-.footer {
-  padding: 14px 24px; border-top: 1px solid var(--border);
-  text-align: center; font-size: 10px; color: #334155;
-}
-
-/* Legend */
-.legend { display: flex; gap: 16px; justify-content: center; font-size: 11px; color: var(--dim); margin-top: 8px; }
-.legend span { display: flex; align-items: center; gap: 4px; }
-.leg-swatch { width: 12px; height: 3px; display: inline-block; border-radius: 1px; }
-.leg-dot { width: 8px; height: 8px; display: inline-block; border-radius: 50%; }
+:root{--bg:#0a0e17;--card:#111827;--border:#1e293b;--text:#e2e8f0;--dim:#64748b;--cyan:#00e5ff;--green:#39ff14;--red:#ff3366;--amber:#ffab00;--mono:'JetBrains Mono','Fira Code',monospace;--display:'Space Grotesk',sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+#upload-screen{display:flex;align-items:center;justify-content:center;min-height:100vh}#upload-screen.hidden{display:none}
+.upload-box{text-align:center;padding:60px 50px;border:2px dashed var(--border);border-radius:12px;background:var(--card);transition:all .2s;max-width:540px;width:90%}
+.upload-box.dragover{border-color:var(--cyan);background:#0a0e1f}.upload-icon{font-size:48px;margin-bottom:16px;opacity:.6}
+.upload-title{font-family:var(--display);font-size:24px;font-weight:700;letter-spacing:3px;margin-bottom:8px}
+.upload-sub{font-size:12px;color:var(--dim);line-height:1.8;margin-bottom:28px}.upload-sub span{color:var(--cyan)}
+.upload-btn{padding:10px 28px;background:transparent;border:1px solid var(--cyan);color:var(--cyan);font-size:12px;border-radius:4px;cursor:pointer;letter-spacing:1.5;text-transform:uppercase;font-family:var(--mono);transition:all .15s}
+.upload-btn:hover{background:var(--cyan);color:var(--bg)}
+#dashboard{display:none}#dashboard.visible{display:block}
+.header{padding:12px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:#0d1117}
+.header-logo{display:flex;align-items:center;gap:10px}.header-logo-icon{font-size:20px;color:var(--cyan)}
+.header-logo-text{font-family:var(--display);font-size:14px;font-weight:700;letter-spacing:2px}
+.product-btns{display:flex;gap:4px}
+.product-btn{padding:6px 16px;font-size:12px;font-family:var(--mono);background:transparent;color:var(--dim);border:1px solid transparent;border-radius:4px;cursor:pointer;letter-spacing:1;transition:all .15s}
+.product-btn.active{background:#1e293b;color:var(--cyan);border-color:#00e5ff44}
+.new-file-btn{padding:6px 14px;font-size:11px;font-family:var(--mono);background:transparent;color:var(--dim);border:1px solid var(--border);border-radius:4px;cursor:pointer;transition:all .15s}
+.new-file-btn:hover{color:var(--text);border-color:var(--dim)}
+.metrics-bar{padding:16px 24px;display:flex;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.metric-card{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:14px 18px;min-width:130px;flex:1 1 130px}
+.metric-label{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:4px}
+.metric-value{font-size:20px;font-weight:700}.metric-sub{font-size:10px;color:#94a3b8;margin-top:2px}
+.tab-bar{padding:0 24px;border-bottom:1px solid var(--border);display:flex;gap:0;overflow-x:auto}
+.tab-btn{padding:10px 20px;font-size:11px;font-family:var(--mono);background:transparent;color:var(--dim);border:none;border-bottom:2px solid transparent;cursor:pointer;text-transform:uppercase;letter-spacing:1px;transition:all .15s;white-space:nowrap}
+.tab-btn.active{background:#1e293b;color:var(--cyan);border-bottom-color:var(--cyan)}.tab-btn:hover{color:var(--text)}
+.chart-area{padding:24px}.chart-container{width:100%}
+.trade-table{width:100%;border-collapse:collapse;font-size:12px}
+.trade-table th{padding:8px 10px;text-align:left;color:var(--dim);border-bottom:1px solid var(--border);font-weight:500}
+.trade-table td{padding:6px 10px;border-bottom:1px solid #1e293b22}.trade-table tr:hover td{background:#1e293b44}
+.side-buy{color:var(--green);font-weight:600}.side-sell{color:var(--red);font-weight:600}
+.footer{padding:14px 24px;border-top:1px solid var(--border);text-align:center;font-size:10px;color:#334155}
 </style>
 </head>
 <body>
-
-<!-- Upload Screen -->
 <div id="upload-screen">
   <div class="upload-box" id="upload-box">
-    <div class="upload-icon">⟐</div>
+    <div class="upload-icon">&#x27D0;</div>
     <div class="upload-title">PROSPERITY SCOPE</div>
-    <div class="upload-sub">
-      Trading analytics dashboard for IMC Prosperity 4<br>
-      Drop a backtest <span>.log</span> file to begin analysis
-    </div>
+    <div class="upload-sub">Trading analytics dashboard for IMC Prosperity 4<br>Drop a <span>.log</span> or <span>.json</span> file to begin</div>
     <button class="upload-btn" onclick="document.getElementById('file-input').click()">Select File</button>
-    <input type="file" id="file-input" accept=".log,.json" style="display:none">
+    <input type="file" id="file-input" accept=".log,.json,.zip" style="display:none">
   </div>
 </div>
-
-<!-- Dashboard -->
 <div id="dashboard">
   <div class="header">
-    <div class="header-logo">
-      <span class="header-logo-icon">⟐</span>
-      <span class="header-logo-text">PROSPERITY SCOPE</span>
-    </div>
+    <div class="header-logo"><span class="header-logo-icon">&#x27D0;</span><span class="header-logo-text">PROSPERITY SCOPE</span></div>
     <div class="product-btns" id="product-btns"></div>
     <button class="new-file-btn" onclick="resetDashboard()">NEW FILE</button>
   </div>
   <div class="metrics-bar" id="metrics-bar"></div>
   <div class="tab-bar" id="tab-bar"></div>
   <div class="chart-area" id="chart-area"></div>
-  <div class="footer">PROSPERITY SCOPE — built for IMC Prosperity 4</div>
+  <div class="footer">PROSPERITY SCOPE &mdash; built for IMC Prosperity 4</div>
 </div>
-
 <script>
-// ─── State ───────────────────────────────────────────────────────────────────
-let DATA = null;
-let SELECTED = null;
-let ACTIVE_TAB = 'price';
-const TABS = [
-  ['price',  'Price & Trades'],
-  ['pnl',    'P&L Curve'],
-  ['micro',  'Microstructure'],
-  ['volume', 'Volume Profile'],
-  ['log',    'Trade Log'],
-];
-const plotlyLayout = {
-  paper_bgcolor: '#0a0e17', plot_bgcolor: '#0a0e17',
-  font: { family: "'JetBrains Mono', monospace", color: '#94a3b8', size: 11 },
-  xaxis: { gridcolor: '#1e293b', zerolinecolor: '#1e293b' },
-  yaxis: { gridcolor: '#1e293b', zerolinecolor: '#1e293b' },
-  margin: { t: 30, r: 20, b: 40, l: 55 },
-  legend: { bgcolor: 'transparent', font: { size: 10 } },
-};
-const plotlyConfig = { responsive: true, displayModeBar: false };
+let DATA=null,SELECTED=null,ACTIVE_TAB='price';
+const TABS=[['price','Price & Trades'],['pnl','P&L Curve'],['micro','Microstructure'],['volume','Volume Profile'],['log','Trade Log']];
+const PL={paper_bgcolor:'#0a0e17',plot_bgcolor:'#0a0e17',font:{family:"'JetBrains Mono',monospace",color:'#94a3b8',size:11},xaxis:{gridcolor:'#1e293b',zerolinecolor:'#1e293b'},yaxis:{gridcolor:'#1e293b',zerolinecolor:'#1e293b'},margin:{t:30,r:20,b:40,l:55},legend:{bgcolor:'transparent',font:{size:10}}};
+const PC={responsive:true,displayModeBar:false};
 
-// ─── Parser ──────────────────────────────────────────────────────────────────
-function parseLog(content) {
-  const sections = { sandbox: [], activities: [], trades: [] };
-  let sec = null;
-  for (const line of content.split('\n')) {
-    const s = line.trim();
-    if (s === 'Sandbox logs:') { sec = 's'; continue; }
-    if (s === 'Activities log:') { sec = 'a'; continue; }
-    if (s === 'Trade History:') { sec = 't'; continue; }
-    if (sec === 's') sections.sandbox.push(line);
-    if (sec === 'a') sections.activities.push(line);
-    if (sec === 't') sections.trades.push(line);
+// --- PARSER: handles .log, submission .json, lambda arrays ---
+
+function parseActivitiesCSV(text){
+  const ticks=[];
+  for(const line of text.trim().split('\n')){
+    if(line.startsWith('day;')||!line.trim())continue;
+    const p=line.split(';');if(p.length<17)continue;
+    const bids=[],asks=[];
+    if(p[3])bids.push([+p[3],+p[4]]);if(p[5])bids.push([+p[5],+p[6]]);if(p[7])bids.push([+p[7],+p[8]]);
+    if(p[9])asks.push([+p[9],+p[10]]);if(p[11])asks.push([+p[11],+p[12]]);if(p[13])asks.push([+p[13],+p[14]]);
+    ticks.push({day:+p[0],ts:+p[1],sym:p[2],mid:+p[15],pnl:+p[16],bids,asks});
   }
+  return ticks;
+}
 
-  const ticks = [];
-  for (const line of sections.activities) {
-    if (line.startsWith('day;') || !line.trim()) continue;
-    const p = line.split(';');
-    if (p.length < 17) continue;
-    const day = +p[0], ts = +p[1], sym = p[2];
-    const bids = [], asks = [];
-    if (p[3]) bids.push([+p[3], +p[4]]);
-    if (p[5]) bids.push([+p[5], +p[6]]);
-    if (p[7]) bids.push([+p[7], +p[8]]);
-    if (p[9]) asks.push([+p[9], +p[10]]);
-    if (p[11]) asks.push([+p[11], +p[12]]);
-    if (p[13]) asks.push([+p[13], +p[14]]);
-    ticks.push({ day, ts, sym, mid: +p[15], pnl: +p[16], bids, asks });
-  }
+function parseLambdaEntry(llVal){
+  try{
+    const ll=JSON.parse(llVal);if(!Array.isArray(ll)||ll.length<5)return null;
+    const s=ll[0];if(!Array.isArray(s)||s.length<7)return null;
+    return{timestamp:s[0],order_depths:s[3]||{},position:s[6]||{},
+      own_trades:Array.isArray(s[4])?s[4]:[],market_trades:Array.isArray(s[5])?s[5]:[],
+      submitted_orders:ll[1]||{},logs:typeof ll[4]==='string'?ll[4]:''};
+  }catch{return null;}
+}
 
-  let tradeList = [];
-  try { tradeList = JSON.parse(sections.trades.join('\n').trim()); } catch {}
-
-  // SIG signals from sandbox
-  const signals = {};
-  for (const line of sections.sandbox) {
-    try {
-      const obj = JSON.parse(line);
-      let inner; try { inner = JSON.parse(obj.lambdaLog || ''); } catch { continue; }
-      if (!Array.isArray(inner) || inner.length < 5) continue;
-      const logs = typeof inner[4] === 'string' ? inner[4] : '';
-      for (const sl of logs.split('\n')) {
-        if (!sl.startsWith('SIG|')) continue;
-        const parts = sl.trim().split('|');
-        if (parts.length < 3) continue;
-        const sym = parts[1];
-        if (!signals[sym]) signals[sym] = [];
-        const ts = Array.isArray(inner[0]) ? inner[0][0] : obj.timestamp;
-        const kvs = { ts };
-        for (const kv of parts.slice(2)) {
-          if (kv.includes('=')) { const [k, v] = kv.split('=', 2); kvs[k] = +v; }
-        }
+function extractSignals(lines){
+  const signals={};
+  for(const line of lines){
+    try{
+      const obj=typeof line==='string'?JSON.parse(line):line;
+      let inner;try{inner=JSON.parse(obj.lambdaLog||'');}catch{continue;}
+      if(!Array.isArray(inner)||inner.length<5)continue;
+      const logs=typeof inner[4]==='string'?inner[4]:'';
+      for(const sl of logs.split('\n')){
+        if(!sl.startsWith('SIG|'))continue;
+        const parts=sl.trim().split('|');if(parts.length<3)continue;
+        const sym=parts[1];if(!signals[sym])signals[sym]=[];
+        const ts=Array.isArray(inner[0])?inner[0][0]:(obj.timestamp||0);
+        const kvs={ts};
+        for(const kv of parts.slice(2)){if(kv.includes('=')){const[k,v]=kv.split('=',2);kvs[k]=+v;}}
         signals[sym].push(kvs);
       }
-    } catch {}
+    }catch{}
+  }
+  return signals;
+}
+
+function lambdaToTicks(entries){
+  const ticks=[];
+  for(const e of entries){
+    if(!e)continue;
+    for(const[sym,dep]of Object.entries(e.order_depths||{})){
+      let bo={},so={};
+      if(Array.isArray(dep)&&dep.length>=2){bo=dep[0]||{};so=dep[1]||{};}
+      else if(dep&&typeof dep==='object'){bo=dep.buy_orders||{};so=dep.sell_orders||{};}
+      const bids=Object.entries(bo).map(([p,v])=>[+p,Math.abs(+v)]).sort((a,b)=>b[0]-a[0]).slice(0,3);
+      const asks=Object.entries(so).map(([p,v])=>[+p,Math.abs(+v)]).sort((a,b)=>a[0]-b[0]).slice(0,3);
+      const mid=(bids.length&&asks.length)?(bids[0][0]+asks[0][0])/2:null;
+      if(mid!==null)ticks.push({day:0,ts:e.timestamp,sym,mid,pnl:0,bids,asks,
+        _ownTrades:e.own_trades,_mktTrades:e.market_trades,_logs:e.logs});
+    }
+  }
+  return ticks;
+}
+
+function parseLog(content){
+  const s=content.trim();
+  let ticks=[],tradeList=[],sbLines=[];
+
+  if(s.startsWith('Sandbox logs:')){
+    const sec={s:[],a:[],t:[]};let cur=null;
+    for(const line of content.split('\n')){
+      const t=line.trim();
+      if(t==='Sandbox logs:'){cur='s';continue;}if(t==='Activities log:'){cur='a';continue;}if(t==='Trade History:'){cur='t';continue;}
+      if(cur)sec[cur].push(line);
+    }
+    ticks=parseActivitiesCSV(sec.a.join('\n'));
+    try{tradeList=JSON.parse(sec.t.join('\n').trim());}catch{}
+    sbLines=sec.s;
+  } else if(s.startsWith('{')){
+    try{
+      const d=JSON.parse(s);
+      if(d.activitiesLog)ticks=parseActivitiesCSV(d.activitiesLog);
+      const rl=d.logs||d.sandboxLogs||[];
+      if(Array.isArray(rl)&&rl.length){
+        sbLines=rl.map(lo=>typeof lo==='string'?lo:JSON.stringify(lo));
+        if(!ticks.length){const lam=rl.filter(lo=>lo.lambdaLog).map(lo=>parseLambdaEntry(lo.lambdaLog)).filter(Boolean);ticks=lambdaToTicks(lam);}
+      }
+      tradeList=d.tradeHistory||[];
+    }catch{throw new Error('Invalid JSON format');}
+  } else if(s.startsWith('[')){
+    try{
+      const arr=JSON.parse(s);
+      const lam=arr.map(item=>typeof item==='string'?parseLambdaEntry(item):item.lambdaLog?parseLambdaEntry(item.lambdaLog):null).filter(Boolean);
+      ticks=lambdaToTicks(lam);
+    }catch{throw new Error('Invalid JSON array');}
+  } else {
+    try{
+      const d=JSON.parse(s);if(d.activitiesLog)ticks=parseActivitiesCSV(d.activitiesLog);
+      tradeList=d.tradeHistory||[];sbLines=(d.logs||d.sandboxLogs||[]).map(lo=>typeof lo==='string'?lo:JSON.stringify(lo));
+    }catch{
+      const sec={s:[],a:[],t:[]};let cur=null;
+      for(const line of content.split('\n')){const t=line.trim();if(t==='Sandbox logs:'){cur='s';continue;}if(t==='Activities log:'){cur='a';continue;}if(t==='Trade History:'){cur='t';continue;}if(cur)sec[cur].push(line);}
+      ticks=parseActivitiesCSV(sec.a.join('\n'));try{tradeList=JSON.parse(sec.t.join('\n').trim());}catch{}sbLines=sec.s;
+    }
   }
 
-  const products = {};
-  for (const t of ticks) {
-    if (!products[t.sym]) products[t.sym] = { ticks: [], trades: [], signals: [] };
-    products[t.sym].ticks.push(t);
-  }
-  for (const t of tradeList) {
-    if (!products[t.symbol]) products[t.symbol] = { ticks: [], trades: [], signals: [] };
-    products[t.symbol].trades.push(t);
-  }
-  for (const [sym, sigs] of Object.entries(signals)) {
-    if (products[sym]) products[sym].signals = sigs;
-  }
+  if(!ticks.length)throw new Error('No trading data found. Upload a .log from the backtester or .json from the Prosperity submission page.');
+
+  const signals=extractSignals(sbLines);
+  const products={};
+  for(const t of ticks){if(!products[t.sym])products[t.sym]={ticks:[],trades:[],signals:[]};products[t.sym].ticks.push(t);}
+  for(const t of tradeList){const sym=t.symbol;if(!products[sym])products[sym]={ticks:[],trades:[],signals:[]};products[sym].trades.push(t);}
+  for(const sym in products){for(const tick of products[sym].ticks){if(tick._ownTrades){for(const t of tick._ownTrades){if(Array.isArray(t)&&t.length>=5){products[sym].trades.push({timestamp:t[5]||tick.ts,symbol:t[0],price:t[1],quantity:t[2],buyer:t[3],seller:t[4]});}}}}}
+  for(const[sym,sigs]of Object.entries(signals)){if(products[sym])products[sym].signals=sigs;}
   return products;
 }
 
-// ─── Stats ───────────────────────────────────────────────────────────────────
-function computeStats(p) {
-  const mids = p.ticks.map(t => t.mid), n = mids.length;
-  if (n < 2) return {};
-  const mean = mids.reduce((a, b) => a + b, 0) / n;
-  const diffs = []; for (let i = 1; i < n; i++) diffs.push(mids[i] - mids[i-1]);
-  const vol = Math.sqrt(diffs.reduce((s, d) => s + d*d, 0) / diffs.length);
-  const dm = diffs.reduce((a, b) => a + b, 0) / diffs.length;
-  const vard = diffs.reduce((s, d) => s + (d-dm)**2, 0) / diffs.length;
-  let ac1 = 0;
-  if (vard > 0 && diffs.length > 1) {
-    ac1 = diffs.slice(1).reduce((s, d, i) => s + (d-dm)*(diffs[i]-dm), 0) / ((diffs.length-1)*vard);
-  }
-  let hurst = null, hurstLabel = '';
-  if (n >= 100) {
-    const ml = Math.min(50, Math.floor(n/10)), lags = [], tau = [];
-    for (let l = 2; l < ml; l++) {
-      const ds = []; for (let i = 0; i < n-l; i++) ds.push(mids[i+l]-mids[i]);
-      const m2 = ds.reduce((a,b)=>a+b,0)/ds.length;
-      tau.push(Math.sqrt(Math.sqrt(ds.reduce((s,x)=>s+(x-m2)**2,0)/ds.length)));
-      lags.push(l);
-    }
-    const xs = lags.map(Math.log), ys = tau.map(Math.log);
-    const sn=xs.length, sx=xs.reduce((a,b)=>a+b,0), sy=ys.reduce((a,b)=>a+b,0);
-    const sxy=xs.reduce((s,x,i)=>s+x*ys[i],0), sx2=xs.reduce((s,x)=>s+x*x,0);
-    hurst = ((sn*sxy-sx*sy)/(sn*sx2-sx*sx))*2;
-    hurstLabel = hurst < 0.45 ? 'Mean-Reverting' : hurst > 0.55 ? 'Trending' : 'Random Walk';
-  }
-  const buys = p.trades.filter(t => t.buyer === 'SUBMISSION');
-  const sells = p.trades.filter(t => t.seller === 'SUBMISSION');
-  const spreads = p.ticks.filter(t => t.bids.length && t.asks.length).map(t => t.asks[0][0] - t.bids[0][0]);
-  const avgSpread = spreads.length ? (spreads.reduce((a,b)=>a+b,0)/spreads.length).toFixed(1) : '—';
-  let maxDd = 0, peak = p.ticks[0]?.pnl || 0;
-  for (const t of p.ticks) { if (t.pnl > peak) peak = t.pnl; if (peak - t.pnl > maxDd) maxDd = peak - t.pnl; }
-  return {
-    finalPnl: (p.ticks[n-1]?.pnl || 0).toFixed(0),
-    maxDd: maxDd.toFixed(0), vol: vol.toFixed(3), ac1: ac1.toFixed(4),
-    hurst: hurst !== null ? hurst.toFixed(4) : 'N/A', hurstLabel,
-    avgSpread, buys: buys.length, sells: sells.length,
-    buyVol: buys.reduce((s,t)=>s+t.quantity,0), sellVol: sells.reduce((s,t)=>s+t.quantity,0),
-  };
+// --- STATS ---
+function computeStats(p){
+  const mids=p.ticks.map(t=>t.mid),n=mids.length;if(n<2)return{finalPnl:'0',maxDd:'0',vol:'0',ac1:'0',hurst:'N/A',hurstLabel:'',avgSpread:'--',buys:0,sells:0,buyVol:0,sellVol:0};
+  const mean=mids.reduce((a,b)=>a+b,0)/n;
+  const diffs=[];for(let i=1;i<n;i++)diffs.push(mids[i]-mids[i-1]);
+  const vol=Math.sqrt(diffs.reduce((s,d)=>s+d*d,0)/diffs.length);
+  const dm=diffs.reduce((a,b)=>a+b,0)/diffs.length;const vard=diffs.reduce((s,d)=>s+(d-dm)**2,0)/diffs.length;
+  let ac1=0;if(vard>0&&diffs.length>1){ac1=diffs.slice(1).reduce((s,d,i)=>s+(d-dm)*(diffs[i]-dm),0)/((diffs.length-1)*vard);}
+  let hurst=null,hurstLabel='';
+  if(n>=100){const ml=Math.min(50,Math.floor(n/10)),lags=[],tau=[];for(let l=2;l<ml;l++){const ds=[];for(let i=0;i<n-l;i++)ds.push(mids[i+l]-mids[i]);const m2=ds.reduce((a,b)=>a+b,0)/ds.length;tau.push(Math.sqrt(Math.sqrt(ds.reduce((s,x)=>s+(x-m2)**2,0)/ds.length)));lags.push(l);}const xs=lags.map(Math.log),ys=tau.map(Math.log);const sn=xs.length,sx=xs.reduce((a,b)=>a+b,0),sy=ys.reduce((a,b)=>a+b,0),sxy=xs.reduce((s,x,i)=>s+x*ys[i],0),sx2=xs.reduce((s,x)=>s+x*x,0);hurst=((sn*sxy-sx*sy)/(sn*sx2-sx*sx))*2;hurstLabel=hurst<.45?'Mean-Reverting':hurst>.55?'Trending':'Random Walk';}
+  const buys=p.trades.filter(t=>t.buyer==='SUBMISSION'),sells=p.trades.filter(t=>t.seller==='SUBMISSION');
+  const spreads=p.ticks.filter(t=>t.bids.length&&t.asks.length).map(t=>t.asks[0][0]-t.bids[0][0]);
+  const avgSpread=spreads.length?(spreads.reduce((a,b)=>a+b,0)/spreads.length).toFixed(1):'--';
+  let maxDd=0,peak=p.ticks[0]?.pnl||0;for(const t of p.ticks){if(t.pnl>peak)peak=t.pnl;if(peak-t.pnl>maxDd)maxDd=peak-t.pnl;}
+  return{finalPnl:(p.ticks[n-1]?.pnl||0).toFixed(0),maxDd:maxDd.toFixed(0),vol:vol.toFixed(3),ac1:ac1.toFixed(4),hurst:hurst!==null?hurst.toFixed(4):'N/A',hurstLabel,avgSpread,buys:buys.length,sells:sells.length,buyVol:buys.reduce((s,t)=>s+t.quantity,0),sellVol:sells.reduce((s,t)=>s+t.quantity,0)};
 }
 
-// ─── Rendering ───────────────────────────────────────────────────────────────
-function showDashboard(products) {
-  DATA = products;
-  document.getElementById('upload-screen').classList.add('hidden');
-  document.getElementById('dashboard').classList.add('visible');
-  const syms = Object.keys(DATA);
-  SELECTED = syms[0];
-  renderProductBtns(syms);
-  renderTabs();
-  refresh();
+// --- RENDERING ---
+function showDashboard(products){DATA=products;document.getElementById('upload-screen').classList.add('hidden');document.getElementById('dashboard').classList.add('visible');const syms=Object.keys(DATA);SELECTED=syms[0];renderProductBtns(syms);renderTabs();refresh();}
+function resetDashboard(){DATA=null;SELECTED=null;ACTIVE_TAB='price';document.getElementById('upload-screen').classList.remove('hidden');document.getElementById('dashboard').classList.remove('visible');}
+function renderProductBtns(syms){const c=document.getElementById('product-btns');c.innerHTML='';for(const s of syms){const btn=document.createElement('button');btn.className='product-btn'+(s===SELECTED?' active':'');btn.textContent=s;btn.onclick=()=>{SELECTED=s;renderProductBtns(syms);refresh();};c.appendChild(btn);}}
+function renderTabs(){const c=document.getElementById('tab-bar');c.innerHTML='';for(const[key,label]of TABS){const btn=document.createElement('button');btn.className='tab-btn'+(key===ACTIVE_TAB?' active':'');btn.textContent=label;btn.onclick=()=>{ACTIVE_TAB=key;renderTabs();renderChart();};c.appendChild(btn);}}
+function refresh(){const p=DATA[SELECTED];const stats=computeStats(p);renderMetrics(stats);renderChart();}
+function renderMetrics(s){const c=document.getElementById('metrics-bar');const pc=+s.finalPnl>=0?'var(--green)':'var(--red)';const hc=s.hurstLabel==='Mean-Reverting'?'#0ea5e9':s.hurstLabel==='Trending'?'var(--amber)':'#94a3b8';c.innerHTML=[card('Final P&L',(+s.finalPnl).toLocaleString(),'',pc),card('Drawdown',s.maxDd,'','var(--red)'),card('Hurst',s.hurst,s.hurstLabel,hc),card('Volatility',s.vol,'','var(--cyan)'),card('AC(1)',s.ac1,+s.ac1<-.3?'Strong mean-rev':'','var(--cyan)'),card('Avg Spread',s.avgSpread,'','var(--cyan)'),card('Buys / Sells',s.buys+' / '+s.sells,s.buyVol+' / '+s.sellVol+' qty','var(--text)')].join('');}
+function card(label,value,sub,color){return '<div class="metric-card"><div class="metric-label">'+label+'</div><div class="metric-value" style="color:'+color+'">'+value+'</div>'+(sub?'<div class="metric-sub">'+sub+'</div>':'')+'</div>';}
+
+// --- CHARTS ---
+function renderChart(){const area=document.getElementById('chart-area');area.innerHTML='<div id="chart-target" class="chart-container"></div>';const p=DATA[SELECTED];if(ACTIVE_TAB==='price')renderPriceChart(p);else if(ACTIVE_TAB==='pnl')renderPnlChart(p);else if(ACTIVE_TAB==='micro')renderMicroChart(p);else if(ACTIVE_TAB==='volume')renderVolumeChart(p);else if(ACTIVE_TAB==='log')renderTradeLog(p);}
+
+function renderPriceChart(p){
+  const step=Math.max(1,Math.floor(p.ticks.length/2000));
+  const ts=[],mid=[],bb=[],ba=[],fair=[],ema=[],bbU=[],bbL=[];
+  const sigMap={};for(const s of p.signals)sigMap[s.ts]=s;
+  for(let i=0;i<p.ticks.length;i+=step){const t=p.ticks[i];ts.push(t.ts);mid.push(t.mid);bb.push(t.bids[0]?.[0]||null);ba.push(t.asks[0]?.[0]||null);const sig=sigMap[t.ts];fair.push(sig?.fair_value??null);ema.push(sig?.ema??null);bbU.push(sig?.bb_upper??null);bbL.push(sig?.bb_lower??null);}
+  const buys=p.trades.filter(t=>t.buyer==='SUBMISSION'),sells=p.trades.filter(t=>t.seller==='SUBMISSION');
+  Plotly.newPlot('chart-target',[
+    {x:ts,y:bbU,mode:'lines',line:{color:'#7c3aed',width:0},showlegend:false,hoverinfo:'skip'},
+    {x:ts,y:bbL,mode:'lines',line:{color:'#7c3aed',width:0},fill:'tonexty',fillcolor:'rgba(124,58,237,0.08)',showlegend:false,hoverinfo:'skip'},
+    {x:ts,y:bb,mode:'lines',line:{color:'#0ea5e9',width:1,dash:'dot'},opacity:.4,name:'Best Bid'},
+    {x:ts,y:ba,mode:'lines',line:{color:'#ef4444',width:1,dash:'dot'},opacity:.4,name:'Best Ask'},
+    {x:ts,y:mid,mode:'lines',line:{color:'#e2e8f0',width:1.5},name:'Mid'},
+    {x:ts,y:fair,mode:'lines',line:{color:'#00e5ff',width:1.5,dash:'dash'},name:'Fair Value'},
+    {x:ts,y:ema,mode:'lines',line:{color:'#ffab00',width:1,dash:'dot'},name:'EMA'},
+    {x:buys.map(t=>t.timestamp),y:buys.map(t=>t.price),mode:'markers',marker:{color:'#39ff14',size:6,symbol:'triangle-up'},name:'Buy'},
+    {x:sells.map(t=>t.timestamp),y:sells.map(t=>t.price),mode:'markers',marker:{color:'#ff3366',size:6,symbol:'triangle-down'},name:'Sell'},
+  ],{...PL,height:420,xaxis:{...PL.xaxis,title:'Timestamp'},yaxis:{...PL.yaxis,title:'Price'},legend:{...PL.legend,x:0,y:1.12,orientation:'h'}},PC);
 }
 
-function resetDashboard() {
-  DATA = null; SELECTED = null; ACTIVE_TAB = 'price';
-  document.getElementById('upload-screen').classList.remove('hidden');
-  document.getElementById('dashboard').classList.remove('visible');
+function renderPnlChart(p){
+  const step=Math.max(1,Math.floor(p.ticks.length/2000));const ts=[],pnl=[];
+  for(let i=0;i<p.ticks.length;i+=step){ts.push(p.ticks[i].ts);pnl.push(p.ticks[i].pnl);}
+  const final=pnl[pnl.length-1]||0,color=final>=0?'#39ff14':'#ff3366';
+  Plotly.newPlot('chart-target',[{x:ts,y:pnl,mode:'lines',line:{color,width:2},fill:'tozeroy',fillcolor:color+'18',name:'P&L'}],
+    {...PL,height:380,xaxis:{...PL.xaxis,title:'Timestamp'},yaxis:{...PL.yaxis,title:'P&L (SeaShells)'},title:{text:'Cumulative P&L \u2014 Final: '+final.toLocaleString(),font:{size:13,color},x:.02}},PC);
 }
 
-function renderProductBtns(syms) {
-  const c = document.getElementById('product-btns');
-  c.innerHTML = '';
-  for (const s of syms) {
-    const btn = document.createElement('button');
-    btn.className = 'product-btn' + (s === SELECTED ? ' active' : '');
-    btn.textContent = s;
-    btn.onclick = () => { SELECTED = s; renderProductBtns(syms); refresh(); };
-    c.appendChild(btn);
-  }
+function renderMicroChart(p){
+  const area=document.getElementById('chart-area');area.innerHTML='<div id="chart-spread" class="chart-container"></div><div id="chart-obi" class="chart-container" style="margin-top:16px"></div>';
+  const step=Math.max(1,Math.floor(p.ticks.length/1500));const ts=[],spreads=[],obi=[],obiC=[];
+  for(let i=0;i<p.ticks.length;i+=step){const t=p.ticks[i];ts.push(t.ts);spreads.push(t.bids.length&&t.asks.length?t.asks[0][0]-t.bids[0][0]:null);const bv=t.bids.reduce((s,b)=>s+b[1],0),av=t.asks.reduce((s,a)=>s+a[1],0),tot=bv+av,o=tot>0?(bv-av)/tot:0;obi.push(Math.round(o*1000)/1000);obiC.push(o>=0?'#0ea5e9':'#ef4444');}
+  Plotly.newPlot('chart-spread',[{x:ts,y:spreads,mode:'lines',line:{color:'#ffab00',width:1.5},name:'Spread'}],{...PL,height:200,yaxis:{...PL.yaxis,title:'Spread'},title:{text:'Bid-Ask Spread',font:{size:12,color:'#94a3b8'},x:.02}},PC);
+  Plotly.newPlot('chart-obi',[{x:ts,y:obi,type:'bar',marker:{color:obiC},name:'OBI'}],{...PL,height:220,xaxis:{...PL.xaxis,title:'Timestamp'},yaxis:{...PL.yaxis,title:'OBI',range:[-1,1]},title:{text:'Order Book Imbalance',font:{size:12,color:'#94a3b8'},x:.02},bargap:0},PC);
 }
 
-function renderTabs() {
-  const c = document.getElementById('tab-bar');
-  c.innerHTML = '';
-  for (const [key, label] of TABS) {
-    const btn = document.createElement('button');
-    btn.className = 'tab-btn' + (key === ACTIVE_TAB ? ' active' : '');
-    btn.textContent = label;
-    btn.onclick = () => { ACTIVE_TAB = key; renderTabs(); renderChart(); };
-    c.appendChild(btn);
-  }
+function renderVolumeChart(p){
+  const buys=p.trades.filter(t=>t.buyer==='SUBMISSION'),sells=p.trades.filter(t=>t.seller==='SUBMISSION');
+  const pm={};for(const t of buys){pm[t.price]=pm[t.price]||{b:0,s:0};pm[t.price].b+=t.quantity;}for(const t of sells){pm[t.price]=pm[t.price]||{b:0,s:0};pm[t.price].s+=t.quantity;}
+  const prices=Object.keys(pm).map(Number).sort((a,b)=>a-b);
+  if(!prices.length){document.getElementById('chart-target').innerHTML='<div style="color:var(--dim);padding:40px">No trades to display</div>';return;}
+  Plotly.newPlot('chart-target',[{y:prices.map(String),x:prices.map(p=>pm[p].b),type:'bar',orientation:'h',marker:{color:'#39ff1488'},name:'Buy Vol'},{y:prices.map(String),x:prices.map(p=>pm[p].s),type:'bar',orientation:'h',marker:{color:'#ff336688'},name:'Sell Vol'}],
+    {...PL,height:400,barmode:'stack',xaxis:{...PL.xaxis,title:'Volume'},yaxis:{...PL.yaxis,title:'Price',type:'category'},title:{text:'Volume Profile',font:{size:12,color:'#94a3b8'},x:.02}},PC);
 }
 
-function refresh() {
-  const p = DATA[SELECTED];
-  const stats = computeStats(p);
-  renderMetrics(stats);
-  renderChart();
+function renderTradeLog(p){
+  const area=document.getElementById('chart-area');const trades=p.trades.filter(t=>t.buyer==='SUBMISSION'||t.seller==='SUBMISSION').sort((a,b)=>a.timestamp-b.timestamp);
+  let html='<div style="font-size:12px;color:var(--dim);margin-bottom:8px">All '+trades.length+' own trades</div><div style="max-height:450px;overflow-y:auto"><table class="trade-table"><thead><tr><th>Time</th><th>Side</th><th>Price</th><th>Qty</th><th>Counterparty</th></tr></thead><tbody>';
+  for(const t of trades){const ib=t.buyer==='SUBMISSION';html+='<tr><td>'+t.timestamp+'</td><td class="'+(ib?'side-buy':'side-sell')+'">'+(ib?'BUY':'SELL')+'</td><td>'+t.price+'</td><td>'+t.quantity+'</td><td style="color:var(--dim)">'+(ib?t.seller:t.buyer)+'</td></tr>';}
+  html+='</tbody></table></div>';area.innerHTML=html;
 }
 
-function renderMetrics(s) {
-  const c = document.getElementById('metrics-bar');
-  const pnlColor = +s.finalPnl >= 0 ? 'var(--green)' : 'var(--red)';
-  const hurstColor = s.hurstLabel === 'Mean-Reverting' ? '#0ea5e9' : s.hurstLabel === 'Trending' ? 'var(--amber)' : '#94a3b8';
-  c.innerHTML = [
-    card('Final P&L', (+s.finalPnl).toLocaleString(), '', pnlColor),
-    card('Drawdown', s.maxDd, '', 'var(--red)'),
-    card('Hurst', s.hurst, s.hurstLabel, hurstColor),
-    card('Volatility', s.vol, '', 'var(--cyan)'),
-    card('AC(1)', s.ac1, +s.ac1 < -0.3 ? 'Strong mean-rev' : '', 'var(--cyan)'),
-    card('Avg Spread', s.avgSpread, '', 'var(--cyan)'),
-    card('Buys / Sells', `${s.buys} / ${s.sells}`, `${s.buyVol} / ${s.sellVol} qty`, 'var(--text)'),
-  ].join('');
-}
-
-function card(label, value, sub, color) {
-  return `<div class="metric-card">
-    <div class="metric-label">${label}</div>
-    <div class="metric-value" style="color:${color}">${value}</div>
-    ${sub ? `<div class="metric-sub">${sub}</div>` : ''}
-  </div>`;
-}
-
-// ─── Charts ──────────────────────────────────────────────────────────────────
-function renderChart() {
-  const area = document.getElementById('chart-area');
-  area.innerHTML = '<div id="chart-target" class="chart-container"></div>';
-  const p = DATA[SELECTED];
-  if (ACTIVE_TAB === 'price') renderPriceChart(p);
-  else if (ACTIVE_TAB === 'pnl') renderPnlChart(p);
-  else if (ACTIVE_TAB === 'micro') renderMicroChart(p);
-  else if (ACTIVE_TAB === 'volume') renderVolumeChart(p);
-  else if (ACTIVE_TAB === 'log') renderTradeLog(p);
-}
-
-function renderPriceChart(p) {
-  const step = Math.max(1, Math.floor(p.ticks.length / 2000));
-  const ts = [], mid = [], bb = [], ba = [];
-  const fair = [], ema = [], bbU = [], bbL = [];
-  const sigMap = {}; for (const s of p.signals) sigMap[s.ts] = s;
-  for (let i = 0; i < p.ticks.length; i += step) {
-    const t = p.ticks[i]; ts.push(t.ts); mid.push(t.mid);
-    bb.push(t.bids[0]?.[0] || null); ba.push(t.asks[0]?.[0] || null);
-    const sig = sigMap[t.ts];
-    fair.push(sig?.fair_value ?? null); ema.push(sig?.ema ?? null);
-    bbU.push(sig?.bb_upper ?? null); bbL.push(sig?.bb_lower ?? null);
-  }
-  const buys = p.trades.filter(t => t.buyer === 'SUBMISSION');
-  const sells = p.trades.filter(t => t.seller === 'SUBMISSION');
-
-  const traces = [
-    { x: ts, y: bbU, mode: 'lines', line: { color: '#7c3aed', width: 0 }, showlegend: false, name: 'BB Upper', hoverinfo: 'skip' },
-    { x: ts, y: bbL, mode: 'lines', line: { color: '#7c3aed', width: 0 }, fill: 'tonexty', fillcolor: 'rgba(124,58,237,0.08)', showlegend: false, name: 'BB Lower', hoverinfo: 'skip' },
-    { x: ts, y: bb, mode: 'lines', line: { color: '#0ea5e9', width: 1, dash: 'dot' }, opacity: 0.4, name: 'Best Bid' },
-    { x: ts, y: ba, mode: 'lines', line: { color: '#ef4444', width: 1, dash: 'dot' }, opacity: 0.4, name: 'Best Ask' },
-    { x: ts, y: mid, mode: 'lines', line: { color: '#e2e8f0', width: 1.5 }, name: 'Mid' },
-    { x: ts, y: fair, mode: 'lines', line: { color: '#00e5ff', width: 1.5, dash: 'dash' }, name: 'Fair Value' },
-    { x: ts, y: ema, mode: 'lines', line: { color: '#ffab00', width: 1, dash: 'dot' }, name: 'EMA' },
-    { x: buys.map(t => t.timestamp), y: buys.map(t => t.price), mode: 'markers',
-      marker: { color: '#39ff14', size: 6, symbol: 'triangle-up' }, name: 'Buy' },
-    { x: sells.map(t => t.timestamp), y: sells.map(t => t.price), mode: 'markers',
-      marker: { color: '#ff3366', size: 6, symbol: 'triangle-down' }, name: 'Sell' },
-  ];
-  Plotly.newPlot('chart-target', traces, {
-    ...plotlyLayout, height: 420,
-    xaxis: { ...plotlyLayout.xaxis, title: 'Timestamp' },
-    yaxis: { ...plotlyLayout.yaxis, title: 'Price' },
-    legend: { ...plotlyLayout.legend, x: 0, y: 1.12, orientation: 'h' },
-  }, plotlyConfig);
-}
-
-function renderPnlChart(p) {
-  const step = Math.max(1, Math.floor(p.ticks.length / 2000));
-  const ts = [], pnl = [];
-  for (let i = 0; i < p.ticks.length; i += step) {
-    ts.push(p.ticks[i].ts); pnl.push(p.ticks[i].pnl);
-  }
-  const final = pnl[pnl.length - 1] || 0;
-  const color = final >= 0 ? '#39ff14' : '#ff3366';
-  Plotly.newPlot('chart-target', [{
-    x: ts, y: pnl, mode: 'lines', line: { color, width: 2 },
-    fill: 'tozeroy', fillcolor: color + '18', name: 'P&L',
-  }], {
-    ...plotlyLayout, height: 380,
-    xaxis: { ...plotlyLayout.xaxis, title: 'Timestamp' },
-    yaxis: { ...plotlyLayout.yaxis, title: 'P&L (SeaShells)' },
-    title: { text: `Cumulative P&L — Final: ${final.toLocaleString()}`, font: { size: 13, color }, x: 0.02 },
-  }, plotlyConfig);
-}
-
-function renderMicroChart(p) {
-  const area = document.getElementById('chart-area');
-  area.innerHTML = '<div id="chart-spread" class="chart-container"></div><div id="chart-obi" class="chart-container" style="margin-top:16px"></div>';
-  const step = Math.max(1, Math.floor(p.ticks.length / 1500));
-  const ts = [], spreads = [], obi = [], obiColor = [];
-  for (let i = 0; i < p.ticks.length; i += step) {
-    const t = p.ticks[i]; ts.push(t.ts);
-    spreads.push(t.bids.length && t.asks.length ? t.asks[0][0] - t.bids[0][0] : null);
-    const bv = t.bids.reduce((s, b) => s + b[1], 0);
-    const av = t.asks.reduce((s, a) => s + a[1], 0);
-    const tot = bv + av; const o = tot > 0 ? (bv - av) / tot : 0;
-    obi.push(Math.round(o * 1000) / 1000);
-    obiColor.push(o >= 0 ? '#0ea5e9' : '#ef4444');
-  }
-  Plotly.newPlot('chart-spread', [{
-    x: ts, y: spreads, mode: 'lines', line: { color: '#ffab00', width: 1.5 }, name: 'Spread',
-  }], {
-    ...plotlyLayout, height: 200,
-    xaxis: { ...plotlyLayout.xaxis }, yaxis: { ...plotlyLayout.yaxis, title: 'Spread' },
-    title: { text: 'Bid-Ask Spread', font: { size: 12, color: '#94a3b8' }, x: 0.02 },
-  }, plotlyConfig);
-
-  Plotly.newPlot('chart-obi', [{
-    x: ts, y: obi, type: 'bar', marker: { color: obiColor }, name: 'OBI',
-  }], {
-    ...plotlyLayout, height: 220,
-    xaxis: { ...plotlyLayout.xaxis, title: 'Timestamp' },
-    yaxis: { ...plotlyLayout.yaxis, title: 'OBI', range: [-1, 1] },
-    title: { text: 'Order Book Imbalance', font: { size: 12, color: '#94a3b8' }, x: 0.02 },
-    bargap: 0,
-  }, plotlyConfig);
-}
-
-function renderVolumeChart(p) {
-  const buys = p.trades.filter(t => t.buyer === 'SUBMISSION');
-  const sells = p.trades.filter(t => t.seller === 'SUBMISSION');
-  const priceMap = {};
-  for (const t of buys) { priceMap[t.price] = priceMap[t.price] || { buyVol: 0, sellVol: 0 }; priceMap[t.price].buyVol += t.quantity; }
-  for (const t of sells) { priceMap[t.price] = priceMap[t.price] || { buyVol: 0, sellVol: 0 }; priceMap[t.price].sellVol += t.quantity; }
-  const prices = Object.keys(priceMap).map(Number).sort((a, b) => a - b);
-  Plotly.newPlot('chart-target', [
-    { y: prices.map(String), x: prices.map(p => priceMap[p].buyVol), type: 'bar', orientation: 'h',
-      marker: { color: '#39ff1488' }, name: 'Buy Volume' },
-    { y: prices.map(String), x: prices.map(p => priceMap[p].sellVol), type: 'bar', orientation: 'h',
-      marker: { color: '#ff336688' }, name: 'Sell Volume' },
-  ], {
-    ...plotlyLayout, height: 400, barmode: 'stack',
-    xaxis: { ...plotlyLayout.xaxis, title: 'Volume' },
-    yaxis: { ...plotlyLayout.yaxis, title: 'Price', type: 'category' },
-    title: { text: 'Volume Profile — Fills by Price', font: { size: 12, color: '#94a3b8' }, x: 0.02 },
-  }, plotlyConfig);
-}
-
-function renderTradeLog(p) {
-  const area = document.getElementById('chart-area');
-  const trades = p.trades
-    .filter(t => t.buyer === 'SUBMISSION' || t.seller === 'SUBMISSION')
-    .sort((a, b) => a.timestamp - b.timestamp);
-  let html = `<div class="chart-desc">All ${trades.length} own trades</div>
-    <div style="max-height:450px;overflow-y:auto">
-    <table class="trade-table"><thead><tr>
-      <th>Time</th><th>Side</th><th>Price</th><th>Qty</th><th>Counterparty</th>
-    </tr></thead><tbody>`;
-  for (const t of trades) {
-    const isBuy = t.buyer === 'SUBMISSION';
-    html += `<tr>
-      <td>${t.timestamp}</td>
-      <td class="${isBuy ? 'side-buy' : 'side-sell'}">${isBuy ? 'BUY' : 'SELL'}</td>
-      <td>${t.price}</td><td>${t.quantity}</td>
-      <td style="color:var(--dim)">${isBuy ? t.seller : t.buyer}</td>
-    </tr>`;
-  }
-  html += '</tbody></table></div>';
-  area.innerHTML = html;
-}
-
-// ─── File handling ───────────────────────────────────────────────────────────
-function handleFile(file) {
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try { showDashboard(parseLog(e.target.result)); }
-    catch (err) { alert('Failed to parse file: ' + err.message); console.error(err); }
-  };
+// --- FILE HANDLING ---
+function handleFile(file){
+  const reader=new FileReader();
+  reader.onload=(e)=>{try{showDashboard(parseLog(e.target.result));}catch(err){alert('Failed to parse file: '+err.message);console.error(err);}};
   reader.readAsText(file);
 }
-
-document.getElementById('file-input').addEventListener('change', (e) => {
-  if (e.target.files[0]) handleFile(e.target.files[0]);
-});
-
-// Drag and drop
-document.body.addEventListener('dragover', (e) => {
-  e.preventDefault();
-  const box = document.getElementById('upload-box');
-  if (box) box.classList.add('dragover');
-});
-document.body.addEventListener('dragleave', () => {
-  const box = document.getElementById('upload-box');
-  if (box) box.classList.remove('dragover');
-});
-document.body.addEventListener('drop', (e) => {
-  e.preventDefault();
-  const box = document.getElementById('upload-box');
-  if (box) box.classList.remove('dragover');
-  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
-});
+document.getElementById('file-input').addEventListener('change',(e)=>{if(e.target.files[0])handleFile(e.target.files[0]);});
+document.body.addEventListener('dragover',(e)=>{e.preventDefault();const b=document.getElementById('upload-box');if(b)b.classList.add('dragover');});
+document.body.addEventListener('dragleave',()=>{const b=document.getElementById('upload-box');if(b)b.classList.remove('dragover');});
+document.body.addEventListener('drop',(e)=>{e.preventDefault();const b=document.getElementById('upload-box');if(b)b.classList.remove('dragover');if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]);});
 </script>
 </body>
 </html>
