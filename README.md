@@ -1,138 +1,77 @@
 # Prosperity Scope
 
-Trading analytics dashboard for [IMC Prosperity 4](https://prosperity.imc.com/).
+Trading analytics dashboard for [IMC Prosperity 4](https://prosperity.imc.com/) — a global algorithmic trading competition with 22,000+ participants.
 
-Upload a backtest `.log` file and get instant analysis across five tabs: price charts with trade overlays, P&L curves, microstructure (spread + OBI), volume profile, and a full trade log.
+**Live:** [prosperity-scope.vercel.app](https://prosperity-scope.vercel.app)
 
-**Live:** Open `index.html` in any browser — no install, no build step, no dependencies.
-
----
-
-## Features
-
-| Tab | What it shows |
-|-----|---------------|
-| **Price & Trades** | Mid price with best bid/ask, fair value, EMA, and Bollinger Band overlays. Buy/sell markers plotted on chart. |
-| **P&L Curve** | Cumulative profit over time with drawdown visibility. |
-| **Microstructure** | Bid-ask spread over time and Order Book Imbalance (OBI) bar chart. |
-| **Volume Profile** | Horizontal histogram of your fills by price level, split by buy/sell. |
-| **Trade Log** | Scrollable table of every trade your algorithm executed. |
-
-**Metrics bar** shows: Final P&L, Max Drawdown, Hurst exponent (with regime label), tick volatility, lag-1 autocorrelation, average spread, and trade counts.
+Drop a backtest log onto the page to get instant market microstructure analysis — Hurst exponent, order book imbalance, fill quality, P&L attribution, all computed in-browser.
 
 ---
 
-## Quick Start
+## Try It
 
-```bash
-# Clone the repo
-git clone https://github.com/YOUR_USERNAME/prosperity-scope.git
-cd prosperity-scope
+1. Go to [prosperity-scope.vercel.app](https://prosperity-scope.vercel.app)
+2. Download [`sample/demo_run.log`](sample/demo_run.log) from this repo
+3. Drag it onto the page
 
-# Open in browser — that's it
-open index.html            # macOS
-start index.html           # Windows
-xdg-open index.html        # Linux
-```
-
-Or serve it locally:
-
-```bash
-python -m http.server 8000
-# Go to http://localhost:8000
-```
-
-Drag and drop any `.log` file from the Prosperity backtester onto the page.
-
----
-
-## Generating Backtest Logs
-
-Install the backtester and run your trading algorithm:
+Or run the included demo trader yourself:
 
 ```bash
 pip install -e backtester/
-prosperity4bt my_trader.py 0--1 0--2 --merge-pnl --out my_run.log
+python -m prosperity4bt demo/trader_v1.py 0--1 0--2 --merge-pnl --out my_run.log
 ```
 
-Then drag `my_run.log` into Prosperity Scope.
-
-### SIG Signal Logging
-
-To populate the fair value, EMA, and Bollinger Band overlays, emit `SIG` lines from your `Trader.run()`:
-
-```python
-print(f"SIG|{symbol}|fair_value={fair:.1f}|ema={ema:.1f}|bb_upper={upper:.1f}|bb_lower={lower:.1f}")
-```
-
-Supported signal keys: `fair_value`, `ema`, `wall_mid`, `bid_wall`, `ask_wall`, `obi`, `position`, `bb_mid`, `bb_upper`, `bb_lower`.
+Then drag `my_run.log` onto the dashboard.
 
 ---
 
-## Log Format
+## What It Shows
 
-The dashboard parses the standard backtester `.log` format:
+| Tab | Description |
+|-----|-------------|
+| **Price & Trades** | Mid price with bid/ask, fair value, EMA, Bollinger Bands. Buy/sell fills plotted as markers. |
+| **P&L Curve** | Cumulative profit with drawdown visibility. |
+| **Microstructure** | Bid-ask spread over time + Order Book Imbalance (OBI). |
+| **Volume Profile** | Fill distribution by price level. |
+| **Trade Log** | Every executed trade in a sortable table. |
+
+**Metrics bar:** Final P&L, max drawdown, Hurst exponent (regime classification), volatility, autocorrelation, average spread, fill counts.
+
+Supports backtester `.log` files, Prosperity submission `.json` files, and lambda log arrays.
+
+---
+
+## Architecture
 
 ```
-Sandbox logs:
-{"sandboxLog":"","lambdaLog":"[...]","timestamp":0}
-
-Activities log:
-day;timestamp;product;bid_price_1;bid_volume_1;...;mid_price;profit_and_loss
-
-Trade History:
-[{"timestamp":0,"buyer":"SUBMISSION","seller":"Bot","symbol":"KELP",...}]
+index.html              Single-file dashboard — no build, no framework
+demo/
+  trader_v1.py           Demo trading algorithm (market-making + mean reversion)
+  datamodel.py           Prosperity 4 type definitions
+sample/
+  demo_run.log           Pre-generated backtest output
 ```
 
----
-
-## Analytics
-
-| Metric | Method |
-|--------|--------|
-| Hurst exponent | Rescaled range via log-log polyfit of lagged standard deviations × 2.0 |
-| Autocorrelation | Lag-1 sample autocovariance of mid-price returns |
-| OBI | `(bidVol - askVol) / (bidVol + askVol)` per tick from L2 depth |
-| Spread | `bestAsk - bestBid` per tick |
-| Max drawdown | Peak-to-trough of cumulative P&L |
+The entire dashboard is one HTML file. Plotly.js from CDN, vanilla JS, zero dependencies. Parsing, Hurst computation, FFT, and OBI correlation all run client-side.
 
 ---
 
-## Tech Stack
+## The Demo Trader
 
-- **Zero dependencies** — single HTML file, no build step
-- **Plotly.js** (CDN) for interactive charts
-- **JetBrains Mono** + **Space Grotesk** fonts
-- Vanilla JavaScript, no framework
+`demo/trader_v1.py` is a market-making algorithm for the tutorial round products:
 
----
+- **EMERALDS** (stable asset) — wall-mid fair value, overbid/undercut quoting, aggressive taking of mispriced levels
+- **TOMATOES** (mean-reverting) — VWAP fair value, inventory-aware position management, soft limits with skew
 
-## Deploying
-
-### GitHub Pages
-
-1. Push to GitHub
-2. Go to Settings → Pages → Source: Deploy from branch → `main` / `root`
-3. Your dashboard is live at `https://YOUR_USERNAME.github.io/prosperity-scope/`
-
-### Vercel / Netlify
-
-Just connect the repo — zero config needed for a static site.
+It logs `SIG|` signal lines that the dashboard reads to render fair value overlays, Bollinger Bands, and OBI charts.
 
 ---
 
-## Project Structure
+## Deploy Your Own
 
-```
-prosperity-scope/
-  index.html          Complete dashboard — open this
-  sample/
-    demo_run.log      Sample backtest log to test with
-  README.md
+```bash
+git clone https://github.com/nikhilboya/prosperity-scope.git
+vercel deploy --prod
 ```
 
----
-
-## Credits
-
-Built for [IMC Prosperity 4](https://prosperity.imc.com/) — the global algorithmic trading competition.
+Or just open `index.html` locally — it works offline.
