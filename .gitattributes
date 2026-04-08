@@ -1,0 +1,3 @@
+index.html linguist-detectable=false
+sample/* linguist-vendored
+demo/*.py linguist-language=Python
